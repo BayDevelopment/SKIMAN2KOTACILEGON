@@ -8,8 +8,8 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
-use Hamcrest\Core\Set;
 use Illuminate\Support\Str;
 
 class CategoryForm
@@ -23,25 +23,20 @@ class CategoryForm
                     ->schema([
                         TextInput::make('name')
                             ->label('Nama Kategori')
-                            ->placeholder('contoh: SKI, Fiqih, Aqidah')
-                            ->helperText('Nama kategori yang akan ditampilkan ke siswa.')
                             ->required()
-                            ->maxLength(100)
                             ->live(onBlur: true)
                             ->afterStateUpdated(
                                 fn($state, Set $set) =>
-                                $set('slug', Str::slug($state))
+                                $set('slug', \Illuminate\Support\Str::slug($state))
                             ),
 
                         TextInput::make('slug')
                             ->label('Slug')
-                            ->placeholder('contoh: ski, fiqih')
-                            ->helperText('Dibuat otomatis dari nama. Hanya huruf kecil, angka, dan tanda hubung.')
+                            ->disabled() // tidak bisa diedit
+                            ->dehydrated() // WAJIB → supaya tetap tersimpan
                             ->required()
-                            ->unique(Category::class, 'slug', ignoreRecord: true)
-                            ->maxLength(100)
-                            ->rules(['alpha_dash'])
-                            ->dehydrateStateUsing(fn($state) => Str::slug($state)),
+                            ->unique(\App\Models\Category::class, 'slug', ignoreRecord: true)
+                            ->maxLength(100),
 
                         Textarea::make('description')
                             ->label('Deskripsi')

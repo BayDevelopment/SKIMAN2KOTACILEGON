@@ -97,10 +97,15 @@ class UserForm
                         FileUpload::make('avatar')
                             ->label('Avatar')
                             ->image()
-                            ->directory('avatars')
+                            ->disk('public')
+                            ->directory('avatars') // ✅ FIX (hapus "storage/")
+                            ->visibility('public')
                             ->maxSize(1024)
                             ->imagePreviewHeight('120')
-                            ->helperText('Upload gambar (JPG/PNG, max 1MB). Opsional.'),
+                            ->imageResizeMode('cover')
+                            ->imageCropAspectRatio('1:1')
+                            ->nullable()
+                            ->helperText('Upload gambar (JPG/PNG, max 1MB). Opsional.')
 
                     ])
                     ->columnSpanFull(),

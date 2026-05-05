@@ -12,6 +12,7 @@ use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\Storage;
 
 class UsersTable
 {
@@ -20,9 +21,9 @@ class UsersTable
         return $table
             ->columns([
                 ImageColumn::make('avatar')
-                    ->label('Avatar')
                     ->circular()
-                    ->defaultImageUrl(asset('images/empty_img.jpg')),
+                    ->disk('public')                                          // ← tentukan disk
+                    ->defaultImageUrl(asset('images/empty_img.jpg')),        // ← fallback kalau null
 
                 TextColumn::make('name')
                     ->label('Nama')

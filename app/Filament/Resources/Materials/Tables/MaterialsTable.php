@@ -26,7 +26,21 @@ class MaterialsTable
                 ImageColumn::make('thumbnail')
                     ->label('Thumbnail')
                     ->square()
-                    ->defaultImageUrl(asset('images/default-material.png')),
+                    ->defaultImageUrl(asset('images/default-material.png'))
+                    ->getStateUsing(function ($record) {
+                        if (!$record->thumbnail) {
+                            return null;
+                        }
+
+                        $path = ltrim($record->thumbnail, '/');
+
+                        // Hilangkan double storage
+                        if (str_starts_with($path, 'storage/storage')) {
+                            $path = str_replace('storage/storage', 'storage', $path);
+                        }
+
+                        return asset($path);
+                    }),
 
                 TextColumn::make('title')
                     ->label('Judul')

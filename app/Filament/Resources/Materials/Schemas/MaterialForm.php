@@ -5,14 +5,16 @@ namespace App\Filament\Resources\Materials\Schemas;
 use App\Models\Category;
 use App\Models\Material;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
-use Hamcrest\Core\Set;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 
 class MaterialForm
@@ -24,6 +26,9 @@ class MaterialForm
             Section::make('Informasi Materi')
                 ->description('Data utama konten pembelajaran.')
                 ->schema([
+
+                    Hidden::make('created_by')
+                        ->default(Auth::id()),
                     Select::make('category_id')
                         ->label('Kategori')
                         ->helperText('Pilih kategori yang sesuai.')
@@ -39,19 +44,19 @@ class MaterialForm
                         ->required()
                         ->maxLength(255)
                         ->live(onBlur: true)
-                        ->afterStateUpdated(
-                            fn($state, Set $set) =>
-                            $set('slug', Str::slug($state))
-                        )
+                        ->afterStateUpdated(function ($state, Set $set) {
+                            $set('slug', Str::slug($state));
+                        })
                         ->columnSpanFull(),
 
                     TextInput::make('slug')
                         ->label('Slug')
-                        ->helperText('Dibuat otomatis dari judul. Harus unik.')
+                        ->disabled()
+                        ->dehydrated()
                         ->required()
                         ->unique(Material::class, 'slug', ignoreRecord: true)
                         ->maxLength(255)
-                        ->dehydrateStateUsing(fn($state) => Str::slug($state))
+                        ->dehydrateStateUsing(fn($state, $get) => Str::slug($state ?: $get('title')))
                         ->columnSpanFull(),
 
                     Select::make('status')                          // ✅ tidak ketinggalan
@@ -77,7 +82,9 @@ class MaterialForm
                         ->imageResizeMode('cover')
                         ->imageCropAspectRatio('16:9')
                         ->maxSize(2048)
-                        ->directory('materials/thumbnails')
+                        ->disk('public')
+                        ->directory('storage/thumbnails') // 🔥 WAJIB untuk shared hosting
+                        ->visibility('public')
                         ->nullable()
                         ->columnSpanFull(),
                 ])
