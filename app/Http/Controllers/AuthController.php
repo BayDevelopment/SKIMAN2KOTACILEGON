@@ -4,50 +4,75 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
     public function index()
     {
-        $data = [
+        return view('auth.login', [
             'title' => 'PEMBELAJARAN DIGITAL MAN 2 KOTA CILEGON | YAKUB'
-        ];
-
-        return view('auth.login', $data);
+        ]);
     }
 
     public function authenticate(Request $request)
     {
-        // ✅ VALIDASI KUAT
+        // ✅ Validasi - HAPUS exists:users,email agar tidak bocor info
         $credentials = $request->validate([
-            'email' => ['required', 'email', 'exists:users,email'],
+            'email'    => ['required', 'email'],
             'password' => ['required', 'string', 'min:6'],
         ], [
-            'email.required' => 'Email wajib diisi',
-            'email.email' => 'Format email tidak valid',
-            'email.exists' => 'Email tidak terdaftar',
+            'email.required'    => 'Email wajib diisi',
+            'email.email'       => 'Format email tidak valid',
             'password.required' => 'Password wajib diisi',
-            'password.min' => 'Password minimal 6 karakter',
+            'password.min'      => 'Password minimal 6 karakter',
         ]);
 
-        // 🔐 PROSES LOGIN
-        if (Auth::attempt($credentials)) {
-            $request->session()->regenerate();
+        // 🛡️ Rate Limiting - max 5 percobaan per menit per IP+email
+        $key = 'login.' . Str::lower($request->email) . '|' . $request->ip();
 
-            return redirect()->intended('/siswa/dashboard')
-                ->with('success', 'Login berhasil');
+        if (RateLimiter::tooManyAttempts($key, 5)) {
+            $seconds = RateLimiter::availableIn($key);
+            return back()->withErrors([
+                'email' => "Terlalu banyak percobaan. Coba lagi dalam {$seconds} detik.",
+            ])->onlyInput('email');
         }
 
-        // ❌ jika password salah
+        // 🔐 Proses Login
+        if (Auth::attempt($credentials, $request->boolean('remember'))) {
+            RateLimiter::clear($key);
+            $request->session()->regenerate();
+
+            $user = Auth::user();
+
+            // ✅ Redirect berdasarkan role
+            if ($user->isAdmin()) {
+                return redirect()->intended('/admin/dashboard')
+                    ->with('success', 'Login berhasil');
+            }
+
+            if ($user->isSiswa()) {
+                return redirect()->intended('/siswa/dashboard')
+                    ->with('success', 'Login berhasil');
+            }
+
+            // Role tidak dikenal → logout paksa
+            Auth::logout();
+            return redirect('/login')->withErrors(['email' => 'Akun tidak memiliki akses.']);
+        }
+
+        // ❌ Login gagal - increment rate limiter
+        RateLimiter::hit($key);
+
         return back()->withErrors([
-            'password' => 'Password atau Email salah!',
+            'email' => 'Email atau password salah.',
         ])->onlyInput('email');
     }
 
     public function destroy(Request $request)
     {
         Auth::logout();
-
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 

@@ -25,16 +25,38 @@
                 @forelse($kategori as $item)
                     <x-progress :label="$item->name" :percent="$item->progress" color="blue" />
                 @empty
-                    <p class="text-xs text-gray-400">Belum ada data progress</p>
+                    <div class="flex flex-col items-center justify-center py-6 text-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-12 h-12 text-gray-200 mb-3" fill="none"
+                            viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                d="M9 17v-6a2 2 0 012-2h2a2 2 0 012 2v6m-6 0h6M3 17h18M12 3v1m0 0a4 4 0 014 4v1H8V8a4 4 0 014-4z" />
+                        </svg>
+                        <p class="text-sm font-medium text-gray-400">Belum ada progress</p>
+                        <p class="text-xs text-gray-300 mt-1">Mulai pelajari materi untuk melihat progress kamu di sini</p>
+                    </div>
                 @endforelse
             </div>
         </x-card>
 
         {{-- CHART --}}
         <x-card title="Ringkasan Materi">
-            <div class="h-[180px] flex items-center justify-center">
-                <canvas id="materiChart"></canvas>
-            </div>
+            @if ($materiSelesai > 0 || $materiBelum > 0)
+                <div class="h-[180px] flex items-center justify-center">
+                    <canvas id="materiChart"></canvas>
+                </div>
+            @else
+                <div class="flex flex-col items-center justify-center py-6 text-center h-[180px]">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-12 h-12 text-gray-200 mb-3" fill="none"
+                        viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                            d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                            d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" />
+                    </svg>
+                    <p class="text-sm font-medium text-gray-400">Belum ada data chart</p>
+                    <p class="text-xs text-gray-300 mt-1">Data akan muncul setelah kamu mulai mengerjakan materi</p>
+                </div>
+            @endif
         </x-card>
 
     </div>

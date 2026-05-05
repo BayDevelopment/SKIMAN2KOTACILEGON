@@ -84,6 +84,6 @@ class Category extends Model
 
     public function publishedMaterials()
     {
-        return $this->hasMany(Material::class)->where('status', 'published');
+        return $this->hasMany(Material::class)->published();
     }
 }

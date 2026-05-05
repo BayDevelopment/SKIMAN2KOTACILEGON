@@ -29,16 +29,6 @@
     {{-- RIGHT: Search + User --}}
     <div class="flex items-center gap-3">
 
-        {{-- Search --}}
-        <div class="hidden sm:flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg px-3 h-8 w-44">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-gray-400 flex-shrink-0" fill="none"
-                viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round"
-                    d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" />
-            </svg>
-            <input type="text" placeholder="Cari materi..."
-                class="bg-transparent text-xs text-gray-600 placeholder-gray-400 outline-none w-full">
-        </div>
 
         {{-- User info --}}
         <div class="hidden sm:block text-right">

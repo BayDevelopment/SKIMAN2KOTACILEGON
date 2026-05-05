@@ -5,6 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 class Material extends Model
 {
@@ -47,10 +49,20 @@ class Material extends Model
     /** URL thumbnail, fallback ke placeholder */
     public function getThumbnailUrlAttribute(): string
     {
-        if ($this->thumbnail) {
+        // kalau upload manual
+        if ($this->thumbnail && Storage::exists($this->thumbnail)) {
             return asset('storage/' . $this->thumbnail);
         }
 
+        // kalau dari youtube
+        if ($this->youtube_url) {
+            preg_match('/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&]+)/', $this->youtube_url, $matches);
+            if (isset($matches[1])) {
+                return "https://img.youtube.com/vi/{$matches[1]}/hqdefault.jpg";
+            }
+        }
+
+        // fallback
         return asset('images/default-material.png');
     }
 
@@ -101,9 +113,20 @@ class Material extends Model
     // RELATIONS
     // ─────────────────────────────────────────
 
+    public function allProgress()
+    {
+        return $this->hasMany(MaterialProgress::class, 'material_id');
+    }
+
     public function userProgress()
     {
-        return $this->hasOne(MaterialProgress::class, 'material_id');
+        return $this->hasMany(MaterialProgress::class, 'material_id');
+    }
+
+    public function myProgress()
+    {
+        return $this->hasOne(MaterialProgress::class, 'material_id')
+            ->where('user_id', Auth::id());
     }
 
     public function category()

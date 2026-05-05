@@ -10,27 +10,26 @@ use Illuminate\Support\Facades\Auth;
 
 class MateriController extends Controller
 {
-    // 🔹 DETAIL MATERI
     public function show(Category $category, Material $materi)
     {
-        // validasi kategori
+        // ✅ Cek relasi category
         if ($materi->category_id !== $category->id) {
             abort(404);
         }
 
-        // 🔥 tambah view count
+        // ✅ Tambahkan: hanya materi published yang bisa dilihat
+        abort_if($materi->status !== 'published', 404);
+
+        // ✅ Baru increment view setelah semua validasi lolos
         $materi->incrementView();
 
-        // 🔥 ambil video
-        $videos = $materi->videos()->get();
-
-        // 🔥 ambil progress user
+        $videos   = $materi->videos()->get();
         $progress = $materi->progress()
             ->where('user_id', Auth::id())
             ->first();
 
         return view('siswa.materi.detail', [
-            'title'    => $materi->title, // ✅ FIX
+            'title'    => $materi->title,
             'kategori' => $category,
             'materi'   => $materi,
             'videos'   => $videos,
@@ -38,23 +37,22 @@ class MateriController extends Controller
         ]);
     }
 
-    // 🔹 MARK SELESAI
     public function selesai(Category $category, Material $materi)
     {
         if ($materi->category_id !== $category->id) {
             abort(404);
         }
 
+        // ✅ Tambahkan: hanya materi published yang bisa diselesaikan
+        abort_if($materi->status !== 'published', 404);
+
         MaterialProgress::updateOrCreate(
-            [
-                'user_id' => Auth::id(),
-                'material_id' => $materi->id
-            ],
-            [
-                'is_completed' => true,
-                'completed_at' => now()
-            ]
+            ['user_id' => Auth::id(), 'material_id' => $materi->id],
+            ['is_completed' => true, 'completed_at' => now()]
         );
+
+        // ✅ Pakai helper yang sudah ada:
+        MaterialProgress::complete(Auth::id(), $materi->id);
 
         return back()->with('success', 'Materi berhasil diselesaikan 🎉');
     }

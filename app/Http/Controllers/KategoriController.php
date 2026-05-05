@@ -4,62 +4,60 @@ namespace App\Http\Controllers;
 
 use App\Models\Category;
 use App\Models\Material;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class KategoriController extends Controller
 {
     // 🔹 HALAMAN INDEX KATEGORI
 
-    public function index()
+    public function index(Request $request)
     {
         $userId = Auth::id();
+        $search = $request->get('search');
 
-        $kategori = Category::where('is_active', true)
+        $kategori = Category::active()
+            ->when($search, fn($q) => $q->where('name', 'like', '%' . $search . '%'))
             ->withCount([
-                // ✅ ini untuk "Total Materi" di blade
-                'materials as published_materials_count' => function ($q) {
-                    $q->where('status', 'published');
-                },
-
-                // ✅ ini untuk hitung yang sudah selesai
-                'materials as selesai_materi' => function ($q) use ($userId) {
-                    $q->where('status', 'published')
-                        ->whereHas('userProgress', function ($q2) use ($userId) {
-                            $q2->where('user_id', $userId)
-                                ->where('is_completed', 1);
-                        });
-                }
+                'materials as published_materials_count' => fn($q) => $q->published(),
+                'materials as selesai_materi' => fn($q) => $q->published()
+                    ->whereHas(
+                        'userProgress',
+                        fn($q2) =>
+                        $q2->where('user_id', $userId)->where('is_completed', 1)
+                    ),
             ])
             ->orderBy('order')
-            ->get();
-
-        // hitung progress %
-        foreach ($kategori as $item) {
-            $item->progress = $item->published_materials_count > 0
-                ? round(($item->selesai_materi / $item->published_materials_count) * 100)
-                : 0;
-        }
+            ->get()
+            ->each(function ($item) {
+                $item->progress = $item->published_materials_count > 0
+                    ? round(($item->selesai_materi / $item->published_materials_count) * 100)
+                    : 0;
+            });
 
         return view('siswa.kategori', [
-            'title' => 'Kategori - E-Learning',
-            'kategori' => $kategori
+            'title'    => 'Kategori - E-Learning',
+            'kategori' => $kategori,
+            'kelas'    => Auth::user()->kelas ?? 'Belum diatur',
+            'search'   => $search,
         ]);
     }
 
     // 🔹 DETAIL KATEGORI (LIST MATERI)
     public function show(Category $category)
     {
+        abort_if(!$category->is_active, 404);
+
         $materi = $category->materials()
             ->where('status', 'published')
-            ->with(['userProgress' => function ($q) {
-                $q->where('user_id', Auth::id());
-            }])
+            ->with(['myProgress']) // ✅ ganti dari userProgress
             ->get();
 
+
         return view('siswa.materi.index', [
-            'title' => 'Kategori - E-Learning',
+            'title'    => 'Kategori - E-Learning',
             'kategori' => $category,
-            'materi' => $materi
+            'materi'   => $materi
         ]);
     }
 }

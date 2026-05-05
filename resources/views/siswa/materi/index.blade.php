@@ -52,7 +52,7 @@
                                 Dilihat {{ $item->view_count }}x
                             </p>
 
-                            @if ($item->userProgress && $item->userProgress->is_completed)
+                            @if ($item->myProgress && $item->myProgress->is_completed)
                                 <span class="text-[10px] bg-green-100 text-green-600 px-2 py-0.5 rounded-full">
                                     ✔ Selesai
                                 </span>

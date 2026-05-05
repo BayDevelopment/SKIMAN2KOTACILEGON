@@ -1,34 +1,36 @@
 @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap");
+
 @import "tailwindcss";
 
+/* Scan Blade & JS */
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source '../**/*.blade.php';
+@source '../**/*.js';
+
+/* Theme */
 @theme {
     --font-sans: "Poppins", ui-sans-serif, system-ui, sans-serif;
 }
 
+/* Base */
 @layer base {
     body {
-        @apply font-sans bg-slate-50 text-gray-800 antialiased;
+        @apply font-sans bg-slate-100 text-gray-800 antialiased;
     }
 }
-
-/* Sidebar Collapsed Logic */
+/* collapse sidebar */
 .sidebar-collapsed {
     width: 70px !important;
 }
 
-/* Sembunyikan teks & brand detail saat collapse */
-.sidebar-collapsed .hide-on-collapse {
+/* sembunyikan teks */
+.sidebar-collapsed span,
+.sidebar-collapsed p {
     display: none;
 }
 
-/* Center icons saat collapse */
+/* center icon */
 .sidebar-collapsed a {
     justify-content: center;
-    padding-left: 0;
-    padding-right: 0;
-}
-
-/* Perbaikan transisi main content */
-#mainContent {
-    transition: margin-left 0.3s ease-in-out;
 }

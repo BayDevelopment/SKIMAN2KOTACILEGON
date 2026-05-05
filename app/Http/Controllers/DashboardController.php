@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Category;
 use App\Models\Material;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class DashboardController extends Controller
@@ -13,9 +12,9 @@ class DashboardController extends Controller
     {
         $userId = Auth::id();
 
-        $totalMateri = Material::where('status', 'published')->count();
+        $totalMateri = Material::published()->count();
 
-        $materiSelesai = Material::where('status', 'published')
+        $materiSelesai = Material::published()
             ->whereHas('userProgress', function ($q) use ($userId) {
                 $q->where('user_id', $userId)
                     ->where('is_completed', 1);
@@ -23,15 +22,15 @@ class DashboardController extends Controller
 
         $materiBelum = $totalMateri - $materiSelesai;
 
-        $totalKategori = Category::where('is_active', true)->count();
+        $totalKategori = Category::active()->count();
 
-        $kategori = Category::where('is_active', true)
+        $kategori = Category::active()
             ->withCount([
                 'materials as total_materi' => function ($q) {
-                    $q->where('status', 'published');
+                    $q->published();
                 },
                 'materials as selesai_materi' => function ($q) use ($userId) {
-                    $q->where('status', 'published')
+                    $q->published()
                         ->whereHas('userProgress', function ($q2) use ($userId) {
                             $q2->where('user_id', $userId)
                                 ->where('is_completed', 1);
@@ -47,11 +46,11 @@ class DashboardController extends Controller
         }
 
         return view('siswa.dashboard', [
-            'title' => 'Dashboard - E-Learning',
+            'title'         => 'Dashboard - E-Learning',
             'materiSelesai' => $materiSelesai,
-            'materiBelum' => $materiBelum,
+            'materiBelum'   => $materiBelum,
             'totalKategori' => $totalKategori,
-            'kategori' => $kategori,
+            'kategori'      => $kategori,
         ]);
     }
 }

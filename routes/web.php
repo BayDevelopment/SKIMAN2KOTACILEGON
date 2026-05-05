@@ -9,11 +9,11 @@ use Illuminate\Support\Facades\Route;
 
 
 Route::get('/', [AuthController::class, 'index'])->middleware('guest.custom');
-Route::get('/login', [AuthController::class, 'index'])->name('login');
-Route::post('/login', [AuthController::class, 'authenticate']);
+Route::get('/login', [AuthController::class, 'index'])->name('login')->middleware('guest.custom');
+Route::post('/login', [AuthController::class, 'authenticate'])->middleware('guest.custom');
 
-// ✅ harus login dulu
-Route::middleware(['auth'])->prefix('siswa')->group(function () {
+// ✅ harus login dulu + role siswa
+Route::middleware(['auth', 'role:siswa'])->prefix('siswa')->group(function () {
 
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('siswa.dashboard');
     Route::get('/profile', [ProfileController::class, 'profile'])->name('siswa.profile');
@@ -31,4 +31,4 @@ Route::middleware(['auth'])->prefix('siswa')->group(function () {
 });
 
 // logout
-Route::post('/logout', [AuthController::class, 'destroy'])->name('logout');
+Route::post('/logout', [AuthController::class, 'destroy'])->name('logout')->middleware('auth');
